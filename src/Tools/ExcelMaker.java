@@ -53,7 +53,7 @@ public class ExcelMaker {
      //0列到7列
      //序号、书名等
     private static void createHeadRow(Map<String, String> titleMap) {
-        HSSFRow headRow = sheet.createRow(2);
+        HSSFRow headRow = sheet.createRow(1);
         int i = 0;
         for (String entry : titleMap.keySet()) {
             HSSFCell headCell = headRow.createCell(i);
@@ -63,11 +63,12 @@ public class ExcelMaker {
     }
 
     //导入数据
+    //反射
     private static void createContentRow(List<?> dataList, Map<String, String> titleMap) {
         try {
             int i = 0;
             for (Object obj : dataList) {
-                HSSFRow textRow = sheet.createRow(3 + i);
+                HSSFRow textRow = sheet.createRow(2 + i);
                 int j = 0;
                 for (String entry : titleMap.keySet()) {
                     String method = "get" + entry.substring(0, 1).toUpperCase() + entry.substring(1);
@@ -87,7 +88,8 @@ public class ExcelMaker {
 
    //建表
     public static void export(List<?> dataList, Map<String, String> titleMap, String sheetName) {
-
+        System.out.println("the number of the book");
+        System.out.println(dataList.size());
         initHSSFWorkbook(sheetName);
         createTitleRow(titleMap, sheetName);
         createHeadRow(titleMap);

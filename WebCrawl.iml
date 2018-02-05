@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module type="JAVA_MODULE" version="4">
-  <component name="NewModuleRootManager" inherit-compiler-output="true">
+  <component name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/../WebCrawl/out/production/WebCrawl" />
+    <output-test url="file://$MODULE_DIR$/../WebCrawl/out/test/WebCrawl" />
     <exclude-output />
     <content url="file://$MODULE_DIR$/../WebCrawl">
       <sourceFolder url="file://$MODULE_DIR$/../WebCrawl/src" isTestSource="false" />

@@ -1,7 +1,12 @@
 package Tools;
 
 import Model.Book;
-import org.htmlparser.Parser;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -12,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Vector;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -21,7 +27,7 @@ public class HtmlParser implements Runnable{
 
     private List<Book> books;
     private String url;
-    public HtmlParser(ArrayList<Book> books) {
+    public HtmlParser(List<Book> books) {
         this.books = books;
     }
     public void setUrl(String url) {
@@ -30,7 +36,7 @@ public class HtmlParser implements Runnable{
     @Override
     public void run() {
         try {
-            parsePage(url);
+            parsePage();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -38,50 +44,48 @@ public class HtmlParser implements Runnable{
 
     //get the data about the book
     //jsoup解析部分并未掌握，
-    public void parsePage (String url) throws IOException {
-            String htmlPage = Jsoup.connect(url).get().toString();
-            Document doc = Jsoup.parse(htmlPage);
-            Elements elements = doc.select("ul.subject-list li.subject-item div.info");
-            for (Element element : elements) {
-                synchronized (HtmlParser.class) {
-                    //name
-                    String name = element.select("h2 a").attr("title");
-                    //phouse,price,and date
-                    String[] pub = element.select("div.pub").text().split("/");
-                    String price = pub[pub.length - 1];
-                    String date = pub[pub.length - 2];
-                    String phouse = pub[pub.length - 3];
-                    StringBuilder author = new StringBuilder();
-                    // author,the number of the author limted to 3
-                    int loop = 3;
-                    for (int i = 0; i < pub.length - loop; i++) {
-                        author.append(pub[i]);
-                    }
-                    //score
-                    String score = element.select("div.star span.rating_nums").text();
-                    //comments
-                    String comments = element.select("div.star span.pl").text();
-                    String regEx = "[^0-9]";
-                    Pattern p = Pattern.compile(regEx);
-                    Matcher m = p.matcher(comments);
-                    comments = m.replaceAll("").trim();
-                    Book book = new Book("", name, score, comments, author.toString(), phouse, date, price);
-                    books.add(book);
+    public void parsePage () throws IOException {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpGet httpGet = new HttpGet(url);
+        CloseableHttpResponse response = httpClient.execute(httpGet);
+        HttpEntity entity =  response.getEntity();
+        String html= EntityUtils.toString(entity, "UTF-8");
+        Document doc = Jsoup.parse(html);
+        Elements elements = doc.select("ul.subject-list li.subject-item div.info");
+        int j=1;
+        for (Element element : elements) {
+            System.out.println(j++);
+            synchronized (HtmlParser.class) {
+                //name
+                String name = element.select("h2 a").attr("title");
+                System.out.println(name);
+                //phouse,price,and date
+                String[] pub = element.select("div.pub").text().split("/");
+                String price = pub[pub.length - 1];
+                String date = pub[pub.length - 2];
+                String phouse = pub[pub.length - 3];
+                StringBuilder author = new StringBuilder();
+                // author,the number of the author limted to 3
+                int loop = 3;
+                for (int i = 0; i < pub.length - loop; i++) {
+                    author.append(pub[i]);
+                }
+                //score
+                String score = element.select("div.star span.rating_nums").text();
+                //comments
+                String comments = element.select("div.star span.pl").text();
+                String regEx = "[^0-9]";
+                Pattern p = Pattern.compile(regEx);
+                Matcher m = p.matcher(comments);
+                comments = m.replaceAll("").trim();
+                Book book = new Book("", name, score, comments, author.toString(), phouse, date, price);
+                books.add(book);
                 }
             }
         }
 
 
-    public static void main(String[] args) {
-        ArrayList<Book> books=new ArrayList<>();
-        HtmlParser hp = new HtmlParser(books);
-        try {
-            hp.parsePage("https://book.douban.com/tag/%E7%BC%96%E7%A8%8B?start=0&type=T");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.println(books.size());
-    }
+
 
     }
 
